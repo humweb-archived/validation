@@ -1,0 +1,396 @@
+<?php namespace Humweb\Validation;
+
+use Input;
+use Validator;
+
+class Validation implements ValidationInterface
+{
+	protected $defaultScope = 'default';
+
+	protected $tokenPrefix = '{';
+	protected $tokenSuffix = '}';
+
+	/**
+	 * Validators
+	 * 
+	 * @var array
+	 */
+	private $validators = [];
+
+	/**
+	 * Attributes for validating
+	 * 
+	 * @var array
+	 */
+	protected $attributes = [];
+
+	/**
+	 * Validation rules
+	 * 
+	 * @var array
+	 */
+	protected $rules = [];
+
+	/**
+	 * Messages for validation rules
+	 * 
+	 * @var array
+	 */
+	protected $messages = [];
+
+	/**
+	 * Validator scopes
+	 * 
+	 * @var array
+	 */
+	protected $scopes = [];
+
+	/**
+	 * Bindings for rules
+	 * 
+	 * @var array
+	 */
+	protected $bindings = [];
+
+	/**
+	 * Validator errors
+	 * 
+	 * @var Illuminate\Support\MessageBag
+	 */
+	protected $errors = [];
+
+	/**
+	 * Creates a new Validator instance
+	 * 
+	 * @param array 					$attributes
+	 * @param string|array 				$scope
+	 * @param ValidatorInstance|array 	$validator
+	 */
+	public function __construct($attributes = null, $scope = null, $validator = null)
+	{
+		$this->validators[] = $this;
+		
+		if ($validator)
+		{
+			$this->extend($validator);
+		}
+
+		if ($scope)
+		{
+			$this->with($scope);
+		}
+
+		$this->attributes = $attributes ?: Input::all();
+
+	}
+
+
+	/**
+	 * Static helper creates a new validator instance
+	 * 
+	 * @param array 					$attributes
+	 * @param string|array 				$scope
+	 * @param ValidatorInstance|array 	$validator
+	 * @return ValidationInterface
+	 */
+	public static function make($attributes = null, $scope = null, $validator = null)
+	{
+		return new static($attributes, $scope, $validator);
+	}
+
+
+	/**
+	 * Add a validation scope
+	 * 
+	 * @param array 	$scope
+	 * @return ValidationInterface
+	 */
+	public function with($scope)
+	{
+		$scope = is_array($scope) ? $scope : [$scope];
+		
+		$this->scopes = array_merge($this->scopes, $scope);
+
+		return $this;
+	}
+
+	/**
+	 * Bind a replacement value to a placeholder in a rule
+	 * You may also use '*' for the field to allow replacments globaly
+	 * 
+	 * @param  string 	$field
+	 * @param  array 	$replacement
+	 * @return ValidationInterface
+	 */
+	public function bind($field, array $replacement)
+	{
+		$this->bindings[$field] = $replacement;
+
+		return $this;
+	}
+
+
+	/**
+	 * Extend current validator with more validators
+	 * 
+	 * @param ValidationInterface|array $validator
+	 */
+	public function extend($validator)
+	{
+		$validator = is_array($validator) ? $validator : [$validator];
+		
+		// $validator->setChild();
+		// $validator->setParent($this);
+
+		$this->validators = array_merge($this->validators, $validator);
+
+		return $this;
+	}
+
+	// public function setAsChild()
+	// {
+	// 	$this->isChild = true;
+	// }
+
+	// public function setParent($validator)
+	// {
+	// 	$this->parentValidator = $validator;
+	// }
+
+	// public function getParent($validator)
+	// {
+	// 	$this->parentValidator = $validator;
+	// }
+
+
+	/**
+	 * Perform validation
+	 * 
+	 * @return boolean
+	 */
+	public function passes()
+	{
+
+		if ( ! count($this->errors))
+		{
+			foreach ($this->validators as $validator)
+			{
+				if ( ! $validator->validate() and $validator !== $this)
+				{
+						$this->errors->merge($validator->errors()->getMessages());
+				}
+			}
+		}
+
+		return (count($this->errors)) ? false : true;
+	}
+
+
+	/**
+	 * Internal validation for a single validator instance
+	 * 
+	 * @return boolean
+	 */
+	protected function validate()
+	{
+		$rules = $this->getRules();
+
+		$validation = Validator::make($this->attributes, $rules, $this->messages);
+
+		if ($validation->passes())
+		{
+			return true;
+		}
+
+		$this->errors = $validation->messages();
+
+		return false;
+	}
+
+
+	/**
+	 * Return any errors.
+	 * 
+	 * @return Illuminate\Support\MessageBag
+	 */
+	public function errors()
+	{
+		if ( ! $this->errors) $this->passes();
+
+		return $this->errors;
+	}
+
+
+	/**
+	 * Get the validaton rules
+	 * 
+	 * @return array
+	 */
+	protected function getRules()
+	{
+		if ( ! $this->hasScope())
+		{
+			return $this->replaceBindings($this->rules);
+		}
+
+		// Set default rules
+		$resultingRules = $this->rules[$this->getDefaultScope()] ?: [];
+
+		foreach ($this->scopes as $scope)
+		{
+			if ( ! isset($this->rules[$scope])) continue;
+
+			$resultingRules = array_merge($resultingRules, $this->rules[$scope]);
+		}
+
+		return $this->replaceBindings($resultingRules);
+	}
+
+
+	/**
+	 * Replace binding placeholders with actual values
+	 * 
+	 * @param  array 	$rules
+	 * @return array
+	 */
+	private function replaceBindings($rules)
+	{
+
+		// If we have no bindings we can just return the rules
+		if (empty($this->bindings))
+		{
+			return $rules;
+		}
+
+		// Get any global bindings to merge into all bindings
+		// Global bindings allow binding values to all the rules
+		$globalBinding = $this->getGlobalBindings();
+
+		foreach ($rules as $field => $rule)
+		{
+			// Field specific bindings
+			$bindings = $this->getBindings($field);
+
+			// Merge global bindings
+			if ( ! empty($globalBinding))
+			{
+				$bindings = $bindings + $globalBinding;
+			}
+
+			foreach ($bindings as $key => $value)
+			{
+				$token = $this->tokenPrefix.$key.$this->tokenSuffix;
+
+				if (is_array($rule))
+				{
+
+					// Handle array type rule sets
+					$rule = array_map(function($v) use ($value, $token) {
+
+						return str_replace($token, $value, $v);
+
+					}, $rule);
+
+				}
+				else {
+
+					// Handle piped style rule set
+					$rule = str_replace($token, $value, $rule);
+
+				}
+			}
+
+			// Set field rule
+			$rules[$field] = $rule;
+		}
+
+		return $rules;
+	}
+
+
+	/**
+	 * Get a bound replacement by field name
+	 * 
+	 * @param  string $key
+	 * @return array
+	 */
+	public function getBindings($key)
+	{
+		return $this->hasBindings($key) ? $this->bindings[$key] : [];
+	}
+
+	/**
+	 * Get a bound replacement by field name
+	 * 
+	 * @param  string $key
+	 * @return array
+	 */
+	public function hasBindings($key)
+	{
+		return isset($this->bindings[$key]);
+	}
+
+	/**
+	 * Check if validator has a global binding
+	 * 
+	 * @return array
+	 */
+	public function getGlobalBindings()
+	{
+		return $this->hasGlobalBindings() ? $this->bindings['*'] : [];
+	}
+
+	/**
+	 * Check if validator has a global binding
+	 * 
+	 * @return bool
+	 */
+	public function hasGlobalBindings()
+	{
+		return isset($this->bindings['*']);
+	}
+
+
+	/**
+	 * Get all attributes
+	 * 
+	 * @return array
+	 */
+	public function getAttributes()
+	{
+		return $this->attributes;
+	}
+
+
+	/**
+	 * Retrieve the valiation scope.
+	 * 
+	 * @return array
+	 */
+	public function getScopes()
+	{
+		return $this->scopes;
+	}
+
+	/**
+	 * Retrieve the valiation scope.
+	 * 
+	 * @return array
+	 */
+	public function getDefaultScope()
+	{
+		return $this->defaultScope;
+	}
+
+
+	/**
+	 * Check if the current validation has a scope.
+	 * 
+	 * @return boolean
+	 */
+	public function hasScope()
+	{
+		return (count($this->getScopes()) or isset($this->rules[$this->getDefaultScope()]));
+	}
+
+}
