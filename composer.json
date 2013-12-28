@@ -1,14 +1,14 @@
 {
     "name": "humweb/validation",
-    "description": "",
+    "description": "This package helps to create scoped extendable validation services",
     "authors": [
         {
-            "name": "",
-            "email": ""
+            "name": "ryun shofner",
+            "email": "ryun@humboldtweb.com"
         }
     ],
     "require": {
-        "php": ">=5.3.0",
+        "php": ">=5.4.0",
         "illuminate/support": "4.1.x"
     },
     "autoload": {
