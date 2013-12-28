@@ -138,29 +138,11 @@ class Validation implements ValidationInterface
 	public function extend($validator)
 	{
 		$validator = is_array($validator) ? $validator : [$validator];
-		
-		// $validator->setChild();
-		// $validator->setParent($this);
 
 		$this->validators = array_merge($this->validators, $validator);
 
 		return $this;
 	}
-
-	// public function setAsChild()
-	// {
-	// 	$this->isChild = true;
-	// }
-
-	// public function setParent($validator)
-	// {
-	// 	$this->parentValidator = $validator;
-	// }
-
-	// public function getParent($validator)
-	// {
-	// 	$this->parentValidator = $validator;
-	// }
 
 
 	/**
@@ -319,6 +301,7 @@ class Validation implements ValidationInterface
 		return $this->hasBindings($key) ? $this->bindings[$key] : [];
 	}
 
+
 	/**
 	 * Get a bound replacement by field name
 	 * 
@@ -330,6 +313,7 @@ class Validation implements ValidationInterface
 		return isset($this->bindings[$key]);
 	}
 
+
 	/**
 	 * Check if validator has a global binding
 	 * 
@@ -339,6 +323,7 @@ class Validation implements ValidationInterface
 	{
 		return $this->hasGlobalBindings() ? $this->bindings['*'] : [];
 	}
+
 
 	/**
 	 * Check if validator has a global binding
@@ -371,6 +356,7 @@ class Validation implements ValidationInterface
 	{
 		return $this->scopes;
 	}
+
 
 	/**
 	 * Retrieve the valiation scope.
