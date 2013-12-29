@@ -1,6 +1,7 @@
 {
     "name": "humweb/validation",
     "description": "This package helps to create scoped extendable validation services",
+    "license": "MIT",
     "authors": [
         {
             "name": "ryun shofner",

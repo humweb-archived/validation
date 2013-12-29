@@ -12,22 +12,8 @@ class UserValidator extends Validation {
 	    ],
 	    'edit' => [
 	    	'username' => '',
-	    	// 'password' => '',
-	        //'email' => 'required|email|unique:users,email,{id}'
+	    	'password' => '',
 	        'email' => 'email'
 	    ]
 	];
-	// protected $rules = [
-	//     'default' => [
-	//     	'username' => 'required',
-	//         'password' => 'required',
-	//         'email' => 'required|email'
-	//     ],
-	//     'edit' => [
-	//     	'username' => '',
-	//     	'password' => '',
-	//         //'email' => 'required|email|unique:users,email,{id}'
-	//         'email' => 'email'
-	//     ]
-	// ];
 }
