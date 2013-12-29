@@ -1,6 +1,8 @@
 {
     "name": "humweb/validation",
     "description": "This package helps to create scoped extendable validation services",
+    "homepage": "https://github.com/humweb/validation",
+    "keywords": ["validation", "laravel"],
     "license": "MIT",
     "authors": [
         {
