@@ -3,7 +3,7 @@
 use Input;
 use Validator;
 
-class Validation implements ValidationInterface
+class Validation implements ValidationInterface, MessageProviderInterface
 {
 	protected $defaultScope = 'default';
 
@@ -200,6 +200,17 @@ class Validation implements ValidationInterface
 		if ( ! $this->errors) $this->passes();
 
 		return $this->errors;
+	}
+
+
+	/**
+	 * Return MessageBag instance
+	 * 
+	 * @return Illuminate\Support\MessageBag
+	 */
+	public function getMessageBag()
+	{
+		return $this->errors();
 	}
 
 
