@@ -2,6 +2,7 @@
 
 use Input;
 use Validator;
+use Illuminate\Support\Contracts\MessageProviderInterface;
 
 class Validation implements ValidationInterface, MessageProviderInterface
 {
