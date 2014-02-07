@@ -2,6 +2,7 @@
 
 use Input;
 use Validator;
+use Illuminate\Support\MessageBag;
 use Illuminate\Support\Contracts\MessageProviderInterface;
 
 class Validation implements ValidationInterface, MessageProviderInterface
@@ -58,7 +59,7 @@ class Validation implements ValidationInterface, MessageProviderInterface
 	 * 
 	 * @var Illuminate\Support\MessageBag
 	 */
-	protected $errors = [];
+	protected $errors;
 
 	/**
 	 * Creates a new Validator instance
@@ -69,6 +70,7 @@ class Validation implements ValidationInterface, MessageProviderInterface
 	 */
 	public function __construct($attributes = null, $scope = null, $validator = null)
 	{
+		$this->errors = new MessageBag;
 		$this->validators[] = $this;
 		
 		if ($validator)
@@ -228,7 +230,7 @@ class Validation implements ValidationInterface, MessageProviderInterface
 		}
 
 		// Set default rules
-		$resultingRules = $this->rules[$this->getDefaultScope()] ?: [];
+		$resultingRules = isset($this->rules[$this->getDefaultScope()]) ? $this->rules[$this->getDefaultScope()] : [];
 
 		foreach ($this->scopes as $scope)
 		{
