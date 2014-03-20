@@ -1,4 +1,3 @@
-This XML file does not appear to have any style information associated with it. The document tree is shown below.
 <project name="Humweb.Validation" default="build">
 <target name="build" depends="prepare,composer,lint,phploc,pdepend,phpmd-ci,phpcs-ci,phpcpd,phpdox,phpunit"/>
 <target name="build-parallel" depends="prepare,lint,tools-parallel,phpunit"/>
