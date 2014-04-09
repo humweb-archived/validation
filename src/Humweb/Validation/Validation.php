@@ -1,7 +1,6 @@
 <?php namespace Humweb\Validation;
 
-use Input;
-use Validator;
+use Input, Validator;
 use Illuminate\Support\MessageBag;
 use Illuminate\Support\Contracts\MessageProviderInterface;
 
@@ -25,6 +24,7 @@ class Validation implements ValidationInterface, MessageProviderInterface
 	 * @var array
 	 */
 	protected $attributes = [];
+
 
 	/**
 	 * Validation rules
@@ -119,7 +119,7 @@ class Validation implements ValidationInterface, MessageProviderInterface
 
 	/**
 	 * Bind a replacement value to a placeholder in a rule
-	 * You may also use '*' for the field to allow replacments globaly
+	 * You may also use '*' for the field to allow replacements globally
 	 * 
 	 * @param  string 	$field
 	 * @param  array 	$replacement
@@ -133,11 +133,12 @@ class Validation implements ValidationInterface, MessageProviderInterface
 	}
 
 
-	/**
-	 * Extend current validator with more validators
-	 * 
-	 * @param ValidationInterface|array $validator
-	 */
+    /**
+     * Extend current validator with more validators
+     *
+     * @param ValidationInterface|array $validator
+     * @return $this
+     */
 	public function extend($validator)
 	{
 		$validator = is_array($validator) ? $validator : [$validator];
@@ -167,20 +168,27 @@ class Validation implements ValidationInterface, MessageProviderInterface
 			}
 		}
 
-		return (count($this->errors)) ? false : true;
+		return (count($this->errors) > 0) ? false : true;
 	}
 
 
-	/**
-	 * Internal validation for a single validator instance
-	 * 
-	 * @return boolean
-	 */
-	protected function validate()
+    /**
+     * Internal validation for a single validator instance
+     *
+     * @param null $connection
+     * @return boolean
+     */
+	protected function validate($connection = null)
 	{
 		$rules = $this->getRules();
 
-		$validation = Validator::make($this->attributes, $rules, $this->messages);
+        if (is_null($connection))
+        {
+            $validation = $this->getValidator($rules);
+        }
+        else {
+            $vaidation = $this->getValidator($rules, $connection);
+        }
 
 		if ($validation->passes())
 		{
@@ -191,6 +199,15 @@ class Validation implements ValidationInterface, MessageProviderInterface
 
 		return false;
 	}
+
+    protected function getValidator($rules, $connection = null)
+    {
+        if ( ! is_null($connection))
+        {
+            Validator::getPresenceVerifier()->setConnection($connection);
+        }
+        return Validator::make($this->attributes, $rules, $this->messages);
+    }
 
 
 	/**
@@ -360,6 +377,15 @@ class Validation implements ValidationInterface, MessageProviderInterface
 		return $this->attributes;
 	}
 
+    /**
+     * Set data to be validated
+     *
+     * @param array $attributes
+     */
+    public function setAttributes($attributes)
+    {
+        $this->attributes = $attributes;
+    }
 
 	/**
 	 * Retrieve the valiation scope.
