@@ -10,17 +10,19 @@ class Validation implements ValidationInterface, MessageProviderInterface
 
 	protected $tokenPrefix = '{';
 	protected $tokenSuffix = '}';
+    protected static $booted = array();
+    protected static $validatorCache = array();
 
 	/**
 	 * Validators
-	 * 
+	 *
 	 * @var array
 	 */
 	private $validators = [];
 
 	/**
 	 * Attributes for validating
-	 * 
+	 *
 	 * @var array
 	 */
 	protected $attributes = [];
@@ -28,42 +30,42 @@ class Validation implements ValidationInterface, MessageProviderInterface
 
 	/**
 	 * Validation rules
-	 * 
+	 *
 	 * @var array
 	 */
 	protected $rules = [];
 
 	/**
 	 * Messages for validation rules
-	 * 
+	 *
 	 * @var array
 	 */
 	protected $messages = [];
 
 	/**
 	 * Validator scopes
-	 * 
+	 *
 	 * @var array
 	 */
 	protected $scopes = [];
 
 	/**
 	 * Bindings for rules
-	 * 
+	 *
 	 * @var array
 	 */
 	protected $bindings = [];
 
 	/**
 	 * Validator errors
-	 * 
+	 *
 	 * @var Illuminate\Support\MessageBag
 	 */
 	protected $errors;
 
 	/**
 	 * Creates a new Validator instance
-	 * 
+	 *
 	 * @param array 					$attributes
 	 * @param string|array 				$scope
 	 * @param ValidatorInstance|array 	$validator
@@ -72,7 +74,7 @@ class Validation implements ValidationInterface, MessageProviderInterface
 	{
 		$this->errors = new MessageBag;
 		$this->validators[] = $this;
-		
+
 		if ($validator)
 		{
 			$this->extend($validator);
@@ -82,15 +84,50 @@ class Validation implements ValidationInterface, MessageProviderInterface
 		{
 			$this->with($scope);
 		}
-
+        $this->bootIfNotBooted();
 		$this->attributes = $attributes ?: Input::all();
 
 	}
 
+    /**
+     * Check if the validator needs to be booted and if so, do it.
+     *
+     * @return void
+     */
+    protected function bootIfNotBooted()
+    {
+        if ( ! isset(static::$booted[get_class($this)]))
+        {
+            static::$booted[get_class($this)] = true;
+
+            static::boot();
+
+        }
+    }
+
+    /**
+     * The "booting" method of the validator
+     *
+     * @return void
+     */
+    protected function boot()
+    {
+        $class = get_called_class();
+
+//        static::$validatorCache[$class] = array();
+//
+//        foreach (get_class_methods($class) as $method)
+//        {
+//            if (preg_match('/^validator(.+)Rule$/', $method, $matches))
+//            {
+//                static::$validatorCache[$class][] = lcfirst($matches[1]);
+//            }
+//        }
+    }
 
 	/**
 	 * Static helper creates a new validator instance
-	 * 
+	 *
 	 * @param array 					$attributes
 	 * @param string|array 				$scope
 	 * @param ValidatorInstance|array 	$validator
@@ -104,14 +141,14 @@ class Validation implements ValidationInterface, MessageProviderInterface
 
 	/**
 	 * Add a validation scope
-	 * 
+	 *
 	 * @param array 	$scope
 	 * @return ValidationInterface
 	 */
 	public function with($scope)
 	{
 		$scope = is_array($scope) ? $scope : [$scope];
-		
+
 		$this->scopes = array_merge($this->scopes, $scope);
 
 		return $this;
@@ -120,7 +157,7 @@ class Validation implements ValidationInterface, MessageProviderInterface
 	/**
 	 * Bind a replacement value to a placeholder in a rule
 	 * You may also use '*' for the field to allow replacements globally
-	 * 
+	 *
 	 * @param  string 	$field
 	 * @param  array 	$replacement
 	 * @return ValidationInterface
@@ -144,6 +181,27 @@ class Validation implements ValidationInterface, MessageProviderInterface
 		$validator = is_array($validator) ? $validator : [$validator];
 
 		$this->validators = array_merge($this->validators, $validator);
+
+		return $this;
+	}
+
+
+    /**
+     * Add new validation rules for the validator
+     *
+     * @param $ruleName
+     * @param string|callable $validator
+     * @param string $message
+     *
+     * @return $this
+     */
+	public function mixin($ruleName, $validator, $message = '')
+	{
+        if ( ! empty($message))
+        {
+            $this->messages[$ruleName] = $message;
+        }
+        Validator::extend($ruleName, $validator);
 
 		return $this;
 	}
