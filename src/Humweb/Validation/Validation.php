@@ -112,7 +112,6 @@ class Validation implements ValidationInterface, MessageProviderInterface
      */
     protected function boot()
     {
-        $class = get_called_class();
     }
 
 	/**
