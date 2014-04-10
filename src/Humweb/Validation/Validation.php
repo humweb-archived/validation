@@ -10,8 +10,8 @@ class Validation implements ValidationInterface, MessageProviderInterface
 
 	protected $tokenPrefix = '{';
 	protected $tokenSuffix = '}';
-    protected static $booted = array();
-    protected static $validatorCache = array();
+        protected static $booted = array();
+        protected static $validatorCache = array();
 
 	/**
 	 * Validators
