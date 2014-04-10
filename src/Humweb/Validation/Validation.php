@@ -84,8 +84,8 @@ class Validation implements ValidationInterface, MessageProviderInterface
 		{
 			$this->with($scope);
 		}
-        $this->bootIfNotBooted();
 		$this->attributes = $attributes ?: Input::all();
+		$this->bootIfNotBooted();
 
 	}
 
@@ -113,16 +113,6 @@ class Validation implements ValidationInterface, MessageProviderInterface
     protected function boot()
     {
         $class = get_called_class();
-
-//        static::$validatorCache[$class] = array();
-//
-//        foreach (get_class_methods($class) as $method)
-//        {
-//            if (preg_match('/^validator(.+)Rule$/', $method, $matches))
-//            {
-//                static::$validatorCache[$class][] = lcfirst($matches[1]);
-//            }
-//        }
     }
 
 	/**
