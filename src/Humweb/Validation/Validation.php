@@ -2,9 +2,9 @@
 
 use Input, Validator;
 use Illuminate\Support\MessageBag;
-use Illuminate\Support\Contracts\MessageProviderInterface;
+use Illuminate\Contracts\Support\MessageProvider;
 
-class Validation implements ValidationInterface, MessageProviderInterface
+class Validation implements ValidationInterface, MessageProvider
 {
 	protected $defaultScope = 'default';
 
@@ -210,7 +210,7 @@ class Validation implements ValidationInterface, MessageProviderInterface
 			{
 				if ( ! $validator->validate() and $validator !== $this)
 				{
-						$this->errors->merge($validator->errors()->getMessages());
+					$this->errors->merge($validator->errors()->getMessages());
 				}
 			}
 		}
