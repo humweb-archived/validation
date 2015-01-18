@@ -1,10 +1,10 @@
 <?php namespace Humweb\Validation;
 
+use Illuminate\Support\Contracts\MessageProviderInterface;
 use Input, Validator;
 use Illuminate\Support\MessageBag;
-use Illuminate\Contracts\Support\MessageProvider;
 
-class Validation implements ValidationInterface, MessageProvider
+class Validation implements ValidationInterface, MessageProviderInterface
 {
 	protected $defaultScope = 'default';
 
